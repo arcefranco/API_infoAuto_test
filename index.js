@@ -49,14 +49,22 @@ app.post("/test/price", async (req, res) => {
     });
     group = groupResponse.data.group.id;
   } catch (error) {
-    return res.send({ result: "Error al buscar el grupo", success: false });
+    return res.send({
+      testing: true,
+      result: "Error al buscar el grupo",
+      success: false,
+    });
   }
   try {
     pricesResponse = await axios.get(baseUrl + `models/${codia}/prices`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch (error) {
-    return res.send({ result: "Verifique el código enviado", success: false });
+    return res.send({
+      testing: true,
+      result: "Verifique el código enviado",
+      success: false,
+    });
   }
 
   const prices = pricesResponse.data.filter((e) => {
@@ -64,6 +72,7 @@ app.post("/test/price", async (req, res) => {
   });
   if (!prices.length) {
     return res.send({
+      testing: true,
       result: "No hay precio para el año indicado",
       success: false,
     });
@@ -78,10 +87,15 @@ app.post("/test/price", async (req, res) => {
       }
     );
   } catch (error) {
-    return res.send({ result: JSON.stringify(error), success: false });
+    return res.send({
+      testing: true,
+      result: JSON.stringify(error),
+      success: false,
+    });
   }
   if (!rotation.length) {
     return res.send({
+      testing: true,
       result: "La marca o el grupo son incorrectos",
       success: false,
     });
@@ -101,7 +115,11 @@ app.post("/test/price", async (req, res) => {
       }
     );
   } catch (error) {
-    return res.send({ result: JSON.stringify(error), success: false });
+    return res.send({
+      testing: true,
+      result: JSON.stringify(error),
+      success: false,
+    });
   }
   logRequestResponse(requestId, {
     result: finalPrice * percentage[0].porcentaje,
@@ -111,6 +129,7 @@ app.post("/test/price", async (req, res) => {
     rotation: rotation[0].rotacion,
   });
   return res.send({
+    testing: true,
     result: finalPrice * percentage[0].porcentaje,
     success: true,
   });
