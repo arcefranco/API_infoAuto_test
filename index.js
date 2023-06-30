@@ -23,12 +23,12 @@ app.listen(PORT, (error) => {
   else console.log("Ocurrió un error: ", error);
 });
 
-app.get("/", (req, res) => {
+app.get("/test", (req, res) => {
   const indexPath = path.resolve(__dirname, "index.html");
   res.sendFile(indexPath);
 });
 
-app.post("/price", async (req, res) => {
+app.post("/test/price", async (req, res) => {
   const requestId = generateUniqueId();
   const { codia, year, km } = req.body;
   logRequestResponse(requestId, req.body);
