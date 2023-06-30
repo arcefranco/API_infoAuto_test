@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
-const PORT = 3000;
+const PORT = 3001;
 const baseUrl = "https://demo.api.infoauto.com.ar/cars/pub/";
 
 app.listen(PORT, (error) => {
