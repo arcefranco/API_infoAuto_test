@@ -32,10 +32,14 @@ app.post("/price", async (req, res) => {
   const requestId = generateUniqueId();
   const { codia, year, km } = req.body;
   logRequestResponse(requestId, req.body);
-  if (!codia || !year || !km)
+  if (!codia || !year || !km) {
+    logRequestResponse(requestId, {
+      result: "Faltan parámetros para realizar la consulta",
+    });
     return res
       .status(404)
       .send({ result: "Faltan parámetros para realizar la consulta" });
+  }
   const token = await accessToken();
   const currentYear = new Date().getFullYear();
   const brand = Math.floor(codia / 10000);
@@ -49,6 +53,11 @@ app.post("/price", async (req, res) => {
     });
     group = groupResponse.data.group.id;
   } catch (error) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: "Error al buscar el grupo",
+      success: false,
+    });
     return res.send({
       testing: true,
       result: "Error al buscar el grupo",
@@ -60,6 +69,11 @@ app.post("/price", async (req, res) => {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch (error) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: "Verifique el código enviado",
+      success: false,
+    });
     return res.send({
       testing: true,
       result: "Verifique el código enviado",
@@ -71,6 +85,11 @@ app.post("/price", async (req, res) => {
     return e.year == year;
   });
   if (!prices.length) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: "No hay precio para el año indicado",
+      success: false,
+    });
     return res.send({
       testing: true,
       result: "No hay precio para el año indicado",
@@ -87,6 +106,11 @@ app.post("/price", async (req, res) => {
       }
     );
   } catch (error) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: JSON.stringify(error),
+      success: false,
+    });
     return res.send({
       testing: true,
       result: JSON.stringify(error),
@@ -94,6 +118,11 @@ app.post("/price", async (req, res) => {
     });
   }
   if (!rotation.length) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: "La marca o el grupo son incorrectos",
+      success: false,
+    });
     return res.send({
       testing: true,
       result: "La marca o el grupo son incorrectos",
@@ -115,6 +144,11 @@ app.post("/price", async (req, res) => {
       }
     );
   } catch (error) {
+    logRequestResponse(requestId, {
+      testing: true,
+      result: JSON.stringify(error),
+      success: false,
+    });
     return res.send({
       testing: true,
       result: JSON.stringify(error),
