@@ -37,12 +37,10 @@ app.post("/price", async (req, res) => {
       success: false,
       result: "Faltan parámetros para realizar la consulta",
     });
-    return res
-      .status(404)
-      .send({
-        success: false,
-        result: "Faltan parámetros para realizar la consulta",
-      });
+    return res.status(404).send({
+      success: false,
+      result: "Faltan parámetros para realizar la consulta",
+    });
   }
   const token = await accessToken();
   const currentYear = new Date().getFullYear();
@@ -160,7 +158,7 @@ app.post("/price", async (req, res) => {
   }
   logRequestResponse(requestId, {
     success: true,
-    result: finalPrice * percentage[0].porcentaje,
+    result: Math.round(finalPrice * percentage[0].porcentaje),
     percentage: percentage[0].porcentaje,
     category: category,
     price: finalPrice,
@@ -169,7 +167,7 @@ app.post("/price", async (req, res) => {
   });
   return res.send({
     success: true,
-    result: finalPrice * percentage[0].porcentaje,
+    result: Math.round(finalPrice * percentage[0].porcentaje),
     testing: true,
   });
 });
