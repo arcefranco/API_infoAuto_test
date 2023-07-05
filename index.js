@@ -34,11 +34,15 @@ app.post("/price", async (req, res) => {
   logRequestResponse(requestId, req.body);
   if (!codia || !year || !km) {
     logRequestResponse(requestId, {
+      success: false,
       result: "Faltan parámetros para realizar la consulta",
     });
     return res
       .status(404)
-      .send({ result: "Faltan parámetros para realizar la consulta" });
+      .send({
+        success: false,
+        result: "Faltan parámetros para realizar la consulta",
+      });
   }
   const token = await accessToken();
   const currentYear = new Date().getFullYear();
@@ -54,14 +58,14 @@ app.post("/price", async (req, res) => {
     group = groupResponse.data.group.id;
   } catch (error) {
     logRequestResponse(requestId, {
-      testing: true,
-      result: "Error al buscar el grupo",
       success: false,
+      result: "Error al buscar el grupo",
+      testing: true,
     });
     return res.send({
-      testing: true,
-      result: "Error al buscar el grupo",
       success: false,
+      result: "Error al buscar el grupo",
+      testing: true,
     });
   }
   try {
@@ -86,14 +90,14 @@ app.post("/price", async (req, res) => {
   });
   if (!prices.length) {
     logRequestResponse(requestId, {
-      testing: true,
-      result: "No hay precio para el año indicado",
       success: false,
+      result: "No hay precio para el año indicado",
+      testing: true,
     });
     return res.send({
-      testing: true,
-      result: "No hay precio para el año indicado",
       success: false,
+      result: "No hay precio para el año indicado",
+      testing: true,
     });
   }
   const finalPrice = prices[0].price * 1000;
@@ -107,31 +111,30 @@ app.post("/price", async (req, res) => {
     );
   } catch (error) {
     logRequestResponse(requestId, {
-      testing: true,
-      result: JSON.stringify(error),
       success: false,
+      result: JSON.stringify(error),
+      testing: true,
     });
     return res.send({
-      testing: true,
-      result: JSON.stringify(error),
       success: false,
+      result: JSON.stringify(error),
+      testing: true,
     });
   }
   if (!rotation.length) {
     logRequestResponse(requestId, {
-      testing: true,
-      result: "La marca o el grupo son incorrectos",
       success: false,
+      result: "La marca o el grupo son incorrectos",
+      testing: true,
     });
     return res.send({
-      testing: true,
-      result: "La marca o el grupo son incorrectos",
       success: false,
+      result: "La marca o el grupo son incorrectos",
+      testing: true,
     });
   }
   const antiquity = currentYear - year;
   const category = obtainCategory(rotation[0].rotacion, antiquity, km);
-  console.log(category);
   try {
     percentage = await pa7_cgConnection.query(
       `SELECT porcentaje
@@ -145,26 +148,28 @@ app.post("/price", async (req, res) => {
     );
   } catch (error) {
     logRequestResponse(requestId, {
-      testing: true,
-      result: JSON.stringify(error),
       success: false,
+      result: JSON.stringify(error),
+      testing: true,
     });
     return res.send({
-      testing: true,
-      result: JSON.stringify(error),
       success: false,
+      result: JSON.stringify(error),
+      testing: true,
     });
   }
   logRequestResponse(requestId, {
+    success: true,
     result: finalPrice * percentage[0].porcentaje,
     percentage: percentage[0].porcentaje,
     category: category,
     price: finalPrice,
     rotation: rotation[0].rotacion,
+    testing: true,
   });
   return res.send({
-    testing: true,
-    result: finalPrice * percentage[0].porcentaje,
     success: true,
+    result: finalPrice * percentage[0].porcentaje,
+    testing: true,
   });
 });
