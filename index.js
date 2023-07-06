@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { accessToken } from "./helpers/accessToken.js";
-import { pa7_cgConnection } from "./helpers/connection.js";
+import { pa7_cgConnection, pa7_comunConnection } from "./helpers/connection.js";
 import { QueryTypes } from "sequelize";
 import { obtainCategory } from "./helpers/obtainCategory.js";
 import path, { dirname } from "path";
@@ -9,6 +9,12 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import { logRequestResponse } from "./logger.js";
 import { generateUniqueId } from "./logger.js";
+import auth from "basic-auth";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import authToken from "./middlewares/authToken.js";
+import authCreateUser from "./middlewares/authCreateUser.js";
+
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,7 +34,58 @@ app.get("/", (req, res) => {
   res.sendFile(indexPath);
 });
 
-app.post("/price", async (req, res) => {
+app.post("/createUser", authCreateUser, async (req, res) => {
+  const { nombre, contraseña } = req.body;
+  const hashedPassword = await bcrypt.hash(contraseña, 10);
+  try {
+    await pa7_comunConnection.query(
+      "INSERT INTO usuarios_api_savi (nombre, contraseña) VALUES (?,?)",
+      {
+        replacements: [nombre, hashedPassword],
+        type: QueryTypes.INSERT,
+      }
+    );
+  } catch (error) {
+    return res.send(error);
+  }
+
+  return res.send("creado!");
+});
+
+app.get("/saviToken", async (req, res) => {
+  const credentials = auth(req);
+
+  const userFinded = await pa7_comunConnection.query(
+    "SELECT * FROM usuarios_api_savi WHERE nombre = ?",
+    {
+      replacements: [credentials.name],
+      type: QueryTypes.SELECT,
+    }
+  );
+
+  if (!userFinded.length) {
+    return res.send("El usuario no existe");
+  } else {
+    bcrypt.compare(
+      credentials.pass,
+      userFinded[0].contraseña,
+      function (err, result) {
+        if (result === true) {
+          const token = jwt.sign(
+            { nombre: credentials.name },
+            process.env.SECRET,
+            { expiresIn: "1h" }
+          );
+          return res.send({ token: token });
+        } else {
+          return res.send(err);
+        }
+      }
+    );
+  }
+});
+
+app.post("/price", authToken, async (req, res) => {
   const requestId = generateUniqueId();
   const { codia, year, km } = req.body;
   logRequestResponse(requestId, req.body);
