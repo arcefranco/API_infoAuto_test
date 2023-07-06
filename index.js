@@ -54,7 +54,7 @@ app.post("/createUser", authCreateUser, async (req, res) => {
 
 app.get("/saviToken", async (req, res) => {
   const credentials = auth(req);
-
+  if (!credentials) return res.send("Enviar auth header");
   const userFinded = await pa7_comunConnection.query(
     "SELECT * FROM usuarios_api_savi WHERE nombre = ?",
     {
