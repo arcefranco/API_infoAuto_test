@@ -42,42 +42,46 @@ const regenerarToken = async () => {
 };
 
 export const accessToken = async () => {
+  let response;
   try {
-    const response = await pa7_comunConnection.query(
+    response = await pa7_comunConnection.query(
       "SELECT * FROM infoauto_tokens ORDER BY id DESC LIMIT 1",
       {
         type: QueryTypes.SELECT,
       }
     );
+  } catch (error) {
+    throw error;
+  }
 
-    if (response[0].length === 0) {
+  if (response[0].length === 0) {
+    try {
+      return regenerarToken();
+    } catch (error) {
+      throw error;
+    }
+  } else {
+    const fechaActual = new Date();
+    const fechaToken = new Date(response[0].token_vencimiento);
+    const fechaRefresh = new Date(response[0].refresh_vencimiento);
+    const fecha55MinAdelante = new Date(fechaActual.getTime() + 55 * 60000);
+    fechaActual.setUTCHours(fechaActual.getUTCHours() - 3);
+    fechaActual.setUTCMinutes(fechaActual.getUTCMinutes());
+    fechaActual.setUTCSeconds(fechaActual.getUTCSeconds());
+
+    if (fechaActual > fechaToken && fechaActual > fechaRefresh) {
+      return regenerarToken();
+    }
+
+    if (fechaActual > fechaToken && fechaActual < fechaRefresh) {
+      const refreshResponse = await axios.post(
+        "https://demo.api.infoauto.com.ar/cars/auth/refresh",
+        {},
+        {
+          headers: { Authorization: `Bearer ${response[0].refresh}` },
+        }
+      );
       try {
-        return regenerarToken();
-      } catch (error) {
-        return error;
-      }
-    } else {
-      const fechaActual = new Date();
-      const fechaToken = new Date(response[0].token_vencimiento);
-      const fechaRefresh = new Date(response[0].refresh_vencimiento);
-      const fecha55MinAdelante = new Date(fechaActual.getTime() + 55 * 60000);
-      fechaActual.setUTCHours(fechaActual.getUTCHours() - 3);
-      fechaActual.setUTCMinutes(fechaActual.getUTCMinutes());
-      fechaActual.setUTCSeconds(fechaActual.getUTCSeconds());
-
-      if (fechaActual > fechaToken && fechaActual > fechaRefresh) {
-        return regenerarToken();
-      }
-
-      if (fechaActual > fechaToken && fechaActual < fechaRefresh) {
-        const refreshResponse = await axios.post(
-          "https://demo.api.infoauto.com.ar/cars/auth/refresh",
-          {},
-          {
-            headers: { Authorization: `Bearer ${response[0].refresh}` },
-          }
-        );
-
         await pa7_comunConnection.query(
           "INSERT INTO infoauto_tokens (token, token_vencimiento, refresh, refresh_vencimiento) VALUES (?,?,?,?)",
           {
@@ -91,13 +95,13 @@ export const accessToken = async () => {
           }
         );
         return refreshResponse.data.access_token;
-      }
-
-      if (fechaActual < fechaToken) {
-        return response[0].token;
+      } catch (error) {
+        throw error;
       }
     }
-  } catch (error) {
-    return error;
+
+    if (fechaActual < fechaToken) {
+      return response[0].token;
+    }
   }
 };

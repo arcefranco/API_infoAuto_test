@@ -54,14 +54,19 @@ app.post("/createUser", authCreateUser, async (req, res) => {
 
 app.get("/saviToken", async (req, res) => {
   const credentials = auth(req);
+  let userFinded;
   if (!credentials) return res.send("Enviar auth header");
-  const userFinded = await pa7_comunConnection.query(
-    "SELECT * FROM usuarios_api_savi WHERE nombre = ?",
-    {
-      replacements: [credentials.name],
-      type: QueryTypes.SELECT,
-    }
-  );
+  try {
+    userFinded = await pa7_comunConnection.query(
+      "SELECT * FROM usuarios_api_savi WHERE nombre = ?",
+      {
+        replacements: [credentials.name],
+        type: QueryTypes.SELECT,
+      }
+    );
+  } catch (error) {
+    return res.send(error);
+  }
 
   if (!userFinded.length) {
     return res.send("El usuario no existe");
@@ -86,26 +91,32 @@ app.get("/saviToken", async (req, res) => {
 });
 
 app.post("/price", authToken, async (req, res) => {
+  logRequestResponse(requestId, req.body);
   const requestId = generateUniqueId();
   const { codia, year, km } = req.body;
-  logRequestResponse(requestId, req.body);
-  if (!codia || !year || !km) {
-    logRequestResponse(requestId, {
-      success: false,
-      result: "Faltan parámetros para realizar la consulta",
-    });
-    return res.status(404).send({
-      success: false,
-      result: "Faltan parámetros para realizar la consulta",
-    });
-  }
-  const token = await accessToken();
   const currentYear = new Date().getFullYear();
   const brand = Math.floor(codia / 10000);
   let group;
   let pricesResponse;
   let rotation;
   let percentage;
+  let token;
+  try {
+    token = await accessToken();
+  } catch (error) {
+    logRequestResponse(requestId, error);
+    return res.send(error);
+  }
+  if (!codia || !year || !km) {
+    logRequestResponse(requestId, {
+      success: false,
+      result: "Faltan parámetros para realizar la consulta",
+    });
+    return res.send({
+      success: false,
+      result: "Faltan parámetros para realizar la consulta",
+    });
+  }
   try {
     let groupResponse = await axios.get(baseUrl + `models/${codia}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -127,6 +138,7 @@ app.post("/price", authToken, async (req, res) => {
     pricesResponse = await axios.get(baseUrl + `models/${codia}/prices`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    if(!pricesResponse.data.length) throw
   } catch (error) {
     logRequestResponse(requestId, {
       testing: true,
