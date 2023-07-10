@@ -121,8 +121,7 @@ app.listen(PORT, (error) => {
 app.use("/info", swaggerui.serve, swaggerui.setup(spaces));
 
 app.get("/", (req, res) => {
-  const indexPath = path.resolve(__dirname, "index.html");
-  res.sendFile(indexPath);
+  return res.send("SAVI API");
 });
 
 app.post("/createUser", authCreateUser, async (req, res) => {
