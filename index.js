@@ -1,3 +1,72 @@
+/**
+ * @swagger
+ * tags:
+ *   name: price
+ * components:
+ *    securitySchemes:
+ *      BasicAuth:
+ *        type: http
+ *        scheme: basic
+ *      BearerAuth:
+ *        type: http
+ *        scheme: bearer
+ *        bearerFormat: JWT
+ * /price:
+ *   post:
+ *     summary: Obtener monto
+ *     tags: [price]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               codia:
+ *                 type: number
+ *                 description: El código de Infoauto
+ *               year:
+ *                 type: number
+ *                 description: Año del auto
+ *               km:
+ *                 type: number
+ *                 description: Kilometraje del auto
+ *             required:
+ *               - codia
+ *               - year
+ *               - km
+ *     responses:
+ *       200:
+ *         description: Respuesta exitosa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 result:
+ *                   type: string
+ *
+ * /saviToken:
+ *   get:
+ *     summary: Obtener token para realizar consultas
+ *     tags: [token]
+ *     security:
+ *       - BasicAuth: []
+ *     responses:
+ *       200:
+ *         description: Respuesta exitosa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ */
+
 import express from "express";
 import axios from "axios";
 import { accessToken } from "./helpers/accessToken.js";
@@ -14,6 +83,10 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import authToken from "./middlewares/authToken.js";
 import authCreateUser from "./middlewares/authCreateUser.js";
+import swaggerjsdoc from "swagger-jsdoc";
+import swaggerui from "swagger-ui-express";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -24,10 +97,28 @@ app.use(express.static(__dirname));
 const PORT = 3001;
 const baseUrl = "https://demo.api.infoauto.com.ar/cars/pub/";
 
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Documentación Savi api",
+    },
+    servers: [
+      {
+        url: process.env.SERVER,
+      },
+    ],
+  },
+  apis: ["index.js"],
+};
+const spaces = swaggerjsdoc(options);
+
 app.listen(PORT, (error) => {
   if (!error) console.log("Escuchando en puerto: " + PORT);
   else console.log("Ocurrió un error: ", error);
 });
+
+app.use("/info", swaggerui.serve, swaggerui.setup(spaces));
 
 app.get("/", (req, res) => {
   const indexPath = path.resolve(__dirname, "index.html");
@@ -79,7 +170,7 @@ app.get("/saviToken", async (req, res) => {
           const token = jwt.sign(
             { nombre: credentials.name },
             process.env.SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "10h" }
           );
           return res.send({ token: token });
         } else {
@@ -91,8 +182,8 @@ app.get("/saviToken", async (req, res) => {
 });
 
 app.post("/price", authToken, async (req, res) => {
-  logRequestResponse(requestId, req.body);
   const requestId = generateUniqueId();
+  logRequestResponse(requestId, req.body);
   const { codia, year, km } = req.body;
   const currentYear = new Date().getFullYear();
   const brand = Math.floor(codia / 10000);
@@ -138,16 +229,16 @@ app.post("/price", authToken, async (req, res) => {
     pricesResponse = await axios.get(baseUrl + `models/${codia}/prices`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if(!pricesResponse.data.length) throw
+    if (!pricesResponse.data.length) throw "Verifique el código enviado";
   } catch (error) {
     logRequestResponse(requestId, {
       testing: true,
-      result: "Verifique el código enviado",
+      result: error,
       success: false,
     });
     return res.send({
       testing: true,
-      result: "Verifique el código enviado",
+      result: error,
       success: false,
     });
   }
