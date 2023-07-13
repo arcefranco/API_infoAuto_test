@@ -116,9 +116,9 @@ const options = {
     info: {
       title: "Documentación Savi api",
       description: `
-        Mediante un usuario y contraseña que les vamos a proveer, deberán solicitar a un endpoint nuestro, el envío de un token.
+        Mediante un usuario y contraseña que les vamos a proveer, deberán solicitar a ${process.env.SERVER}/saviToken el envío de un token.
         Ese token les servirá para consumir el endpoint que les devolverá el precio de toma a utilizar. El token tendrá una vida útil de 10 horas.
-        Te recuerdo los parámetros que esperará el endpoint de consulta:
+        Los parámetros que esperará el endpoint de consulta serán:
         - codia: código de modelo exacto de infoauto
         - year: Año del auto
         - km: Kilometraje del auto
