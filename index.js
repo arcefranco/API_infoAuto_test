@@ -132,7 +132,17 @@ const options = {
   },
   apis: ["index.js"],
 };
-
+const swaggerOptions = {
+  customCss: `
+    .swagger-ui .markdown code, .swagger-ui .renderedMarkdown code {
+      color: #333;
+      font-family: system-ui;
+    }
+  `,
+  customSiteTitle: "Savi API Doc",
+  /*   favicon16: "path/to/custom-favicon-16.png",
+  favicon32: "path/to/custom-favicon-32.png", */
+};
 const spaces = swaggerjsdoc(options);
 
 app.listen(PORT, (error) => {
@@ -148,7 +158,7 @@ app.use(
   },
   verifyUserCredentials,
   swaggerui.serve,
-  swaggerui.setup(spaces)
+  swaggerui.setup(spaces, swaggerOptions)
 );
 
 app.get("/", (req, res) => {
