@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 
 export const authCreateUser = async (req, res, next) => {
-  console.log(req.body);
   const token = req.session.token;
   let decoded;
   if (!token) {
