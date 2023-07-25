@@ -310,8 +310,13 @@ app.post("/price", authToken, async (req, res) => {
       success: false,
       result: "Faltan parámetros para realizar la consulta",
     });
-  }
-  if (isNaN(codia) || isNaN(year) || isNaN(km)) {
+  } else if (
+    isNaN(codia) ||
+    isNaN(year) ||
+    isNaN(km) ||
+    km === null ||
+    km === ""
+  ) {
     logRequestResponse(requestId, {
       success: false,
       nombre: req.body.nombre,
